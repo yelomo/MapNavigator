@@ -52,4 +52,32 @@ public class Directions {
 		return routes;
 	}
 
+	public String getDuration(){
+		return routes.get(0).getDuration();
+	}
+
+	public String getLocalizedDurationDE(){
+		String duration = routes.get(0).getDuration();
+		//localize the string
+		duration = duration.replace("days", "Tage");
+		duration = duration.replace("day", "Tag");
+		duration = duration.replace("hours", "Stunden");
+		duration = duration.replace("hour", "Stunde");
+		duration = duration.replace("mins", "Minuten");
+		duration = duration.replace("min", "Minute");
+
+		return duration;
+	}
+
+	public double getDistance(){
+		double total = 0.0;
+		for(Route route : routes){
+			if(route.getDistance() != null){
+				//the string looks like this 2,890.0 km so we have to get the first element before the
+				//whitespace and replace the comma to parse a Double
+				total = total + Double.parseDouble(route.getDistance().split("\\s+")[0].replace(",",""));
+			}
+		}
+		return total;
+	}
 }

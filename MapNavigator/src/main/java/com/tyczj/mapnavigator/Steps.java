@@ -78,7 +78,6 @@ public class Steps {
 			if(!step.isNull("polyline")){
 				JSONObject pos = step.getJSONObject("polyline");
 				decodePoly(pos.getString("points"));
-//				Log.d("Step count", String.valueOf(stepLine.size()));
 			}
 			
 			instructions = step.getString("html_instructions");
@@ -111,8 +110,6 @@ public class Steps {
             lng += dlng;
  
             LatLng position = new LatLng((double) lat / 1E5, (double) lng / 1E5);
-//            Log.d("Lat", String.valueOf(position.latitude));
-//            Log.d("Lng", String.valueOf(position.longitude));
             stepLine.add(position);
         }
     }

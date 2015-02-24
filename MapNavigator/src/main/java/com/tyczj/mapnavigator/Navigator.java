@@ -2,6 +2,7 @@ package com.tyczj.mapnavigator;
 
 import java.util.ArrayList;
 
+import android.util.Log;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
@@ -21,27 +22,33 @@ import android.graphics.Color;
 import android.os.AsyncTask;
 
 public class Navigator {
-	@SuppressWarnings("unused")
 	private Context context;
 	private LatLng startPosition, endPosition;
 	private String mode;
 	private GoogleMap map;
 	private Directions directions;
-	private int pathColor = Color.BLUE;
-	private int pathBorderColor = Color.BLACK;
+	private int pathColor = Color.parseColor("#009688");
 	private int secondPath = Color.CYAN;
 	private int thirdPath = Color.RED;
-	private float pathWidth = 14;
+	private float pathWidth = 15;
 	private OnPathSetListener listener;
 	private boolean alternatives = false;
 	private long arrivalTime;
 	private String avoid;
 	private ArrayList<Polyline> lines = new ArrayList<Polyline>();
+	private boolean showPath;
 	
 	public Navigator(GoogleMap map, LatLng startLocation, LatLng endLocation){
 		this.startPosition = startLocation;
 		this.endPosition = endLocation;
 		this.map = map;
+		showPath = true;
+	}
+
+	public Navigator(LatLng startLocation, LatLng endLocation){
+		this.startPosition = startLocation;
+		this.endPosition = endLocation;
+		showPath = false;
 	}
 	
 	public interface OnPathSetListener{
@@ -70,9 +77,7 @@ public class Navigator {
 	
 	/**
 	 * Get's driving directions from the starting location to the ending location
-	 * 
-	 * @param showDialog 
-	 *  Set to true if you want to show a ProgressDialog while retrieving directions
+	 *
 	 *  @param findAlternatives
 	 *  give alternative routes to the destination
 	 *  
@@ -146,11 +151,7 @@ public class Navigator {
 	public void setPathColor(int firstPath,int secondPath, int thirdPath){
 		pathColor = firstPath;
 	}
-	
-	public void setPathBorderColor(int firstPath,int secondPath, int thirdPath){
-		pathBorderColor = firstPath;
-	}
-	
+
 	/**
 	 * Change the width of the path line
 	 * @param width
@@ -161,11 +162,17 @@ public class Navigator {
 	}
 	
 	private Polyline showPath(Route route,int color){
-		return map.addPolyline(new PolylineOptions().addAll(route.getPath()).color(color).width(pathWidth));
+		if(showPath)
+			return map.addPolyline(new PolylineOptions().addAll(route.getPath()).color(color).width(pathWidth));
+		else
+			return null;
 	}
 	
 	private Polyline showBorderPath(Route route, int color){
-		return map.addPolyline(new PolylineOptions().addAll(route.getPath()).color(color).width(pathWidth + 12));
+		if(showPath)
+			return map.addPolyline(new PolylineOptions().addAll(route.getPath()).color(color).width(pathWidth + 12));
+		else
+			return null;
 	}
 	
 	public ArrayList<Polyline> getPathLines(){
@@ -184,7 +191,7 @@ public class Navigator {
 		                + "origin=" + startPosition.latitude + "," + startPosition.longitude
 		                + "&destination=" + endPosition.latitude + "," + endPosition.longitude
 		                + "&sensor=false&units=metric&mode="+mode+"&alternatives="+String.valueOf(alternatives);
-		        
+
 		        if(mode.equals("transit")){
 		        	if(arrivalTime > 0){
 		        		url += url + "&arrival_time="+arrivalTime;
@@ -202,14 +209,11 @@ public class Navigator {
 		            HttpContext localContext = new BasicHttpContext();
 		            HttpPost httpPost = new HttpPost(url);
 		            HttpResponse response = httpClient.execute(httpPost, localContext);
-		            
-		            if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
-		            	
+					if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK){
 		            	String s = EntityUtils.toString(response.getEntity());
-			            return new Directions(s);
+						return new Directions(s);
 		            }
-		            
-		            
+
 		            return null;
 		        } catch (Exception e) {
 		            e.printStackTrace();
@@ -218,31 +222,27 @@ public class Navigator {
 		}
 		
 		@Override
-		protected void onPostExecute(Directions directions){
-			
-			if(directions != null){
-				Navigator.this.directions = directions;
-				for(int i=0; i<directions.getRoutes().size(); i++){
-					Route r = directions.getRoutes().get(i);
-					if(i == 0){
-						lines.add(showBorderPath(r,pathBorderColor));
-						lines.add(showPath(r,pathColor));
-					}else if(i == 1){
-						lines.add(showBorderPath(r,pathBorderColor));
-						lines.add(showPath(r,secondPath));
-					}else if(i == 3){
-						lines.add(showBorderPath(r,pathBorderColor));
-						lines.add(showPath(r,thirdPath));
+		protected void onPostExecute(Directions directions) {
+			if (showPath) {
+					if (directions != null) {
+						Navigator.this.directions = directions;
+						for (int i = 0; i < directions.getRoutes().size(); i++) {
+							Route r = directions.getRoutes().get(i);
+							if (i == 0) {
+								lines.add(showPath(r, pathColor));
+							} else if (i == 1) {
+								lines.add(showPath(r, secondPath));
+							} else if (i == 3) {
+								lines.add(showPath(r, thirdPath));
+							}
+						}
 					}
-				}
+			}
 
-				if(listener != null){
-					listener.onPathSetListener(directions);
-				}
-				
+			if (listener != null) {
+				listener.onPathSetListener(directions);
 			}
 		}
-		
 	}
 
 }
