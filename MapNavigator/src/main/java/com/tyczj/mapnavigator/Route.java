@@ -2,6 +2,7 @@ package com.tyczj.mapnavigator;
 
 import java.util.ArrayList;
 
+import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,22 +42,23 @@ public class Route {
 							endAddress = obj.getString("end_address");
 						}
 
+						if(!obj.isNull("distance")){
+							Log.d("parsing","parsing distance");
+							JSONObject objDis = obj.getJSONObject("distance");
+							totalDistance = objDis.getString("text");
+						}
+
+						if(!obj.isNull("duration")){
+							Log.d("parsing","parsing duration");
+							JSONObject objDur = obj.getJSONObject("duration");
+							totalDuration = objDur.getString("text");
+						}
 					}
-					
 					legs.add(new Legs(obj));
 				}
 			}
 			
-			if(!obj3.isNull("distance")){
-				JSONObject obj = obj3.getJSONObject("distance");
-				totalDistance = obj.getString("text");
-			}
-			
-			if(!obj3.isNull("duration")){
-				JSONObject obj = obj3.getJSONObject("duration");
-				totalDuration = obj.getString("text");
-			}
-			
+
 			if(!obj3.isNull("start_location")){
 				JSONArray pos = obj3.getJSONArray("start_location");
 				
@@ -74,7 +76,6 @@ public class Route {
 			
 			if(!obj3.isNull("bounds")){
 				JSONObject pos = obj3.getJSONObject("bounds");
-
 					LatLng southWest = null;
 					LatLng northEast = null;
 					if(!pos.isNull("southwest")){
@@ -101,7 +102,7 @@ public class Route {
 			}
 			
 		}catch(JSONException e){
-			e.printStackTrace();
+			Log.e("MapNavigator","Error parsing JSON",e);
 		}
 		
 	}
